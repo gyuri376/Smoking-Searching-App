@@ -1,1 +1,1 @@
-# Smoking-Searching-App
+# 흡연 구역 탐색 앱
