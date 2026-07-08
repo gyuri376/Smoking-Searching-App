@@ -1,0 +1,162 @@
+:root{
+  --bg:#f2fbf7;
+  --primary:#1ba86a;
+  --primary-dark:#138855;
+  --muted:#5f6f75;
+  --brand-soft:#e5f8ef;
+}
+*{box-sizing:border-box}
+body,html,#root{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;background:var(--bg);}
+.app{max-width:420px;margin:0 auto;min-height:100%;position:relative;padding-bottom:90px}
+
+/* Header */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:white}
+.menu{font-size:22px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;color:#1b7257}
+.logo .mark{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0;background:transparent;border:none}
+.logo .mark img{width:44px;height:44px;border-radius:10px;display:block}
+.logo-text{font-size:18px}
+
+/* When logo image is missing, ensure title stays aligned and centered in header area */
+.logo.no-image{align-items:center}
+.logo.no-image .mark{width:0;height:0;padding:0;margin-right:0}
+.logo.no-image .logo-text{margin-left:0}
+.icons{display:flex;gap:12px}
+
+/* Banner */
+.banner{margin:14px 16px;border-radius:14px;background:linear-gradient(90deg,#2dc682,#1c9f6a);color:white;padding:20px;display:flex;gap:12px;align-items:center}
+.banner .text{flex:1}
+.banner h2{margin:0;font-size:20px}
+.banner p{margin:6px 0 0;color:rgba(255,255,255,0.9)}
+.mascot{width:96px;height:96px;border-radius:50%;background:white;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* Icons row */
+.icons-row{display:flex;gap:14px;padding:16px;background:transparent}
+.icon-item{flex:1;text-align:center}
+.icon-circle{width:54px;height:54px;border-radius:12px;background:white;display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px}
+.icon-label{font-size:12px;color:var(--muted)}
+
+/* Recommendation mascot */
+.recommendation-header{display:flex;align-items:center;gap:12px}
+.mascot-recommendation{width:84px;height:84px;object-fit:contain;border-radius:12px}
+
+@media (max-width:420px){
+  .mascot-recommendation{width:64px;height:64px}
+  .recommendation-header{gap:8px}
+}
+
+/* Location selector */
+.location{margin:12px 16px;background:white;border-radius:28px;display:flex;align-items:center;gap:12px;padding:10px 14px}
+.loc-left{display:flex;align-items:center;gap:10px}
+.loc-city{font-weight:600}
+.loc-area{color:var(--muted)}
+
+/* Home address bar */
+.home-address-bar{display:flex;gap:10px;padding:16px}
+.home-address-chip{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:999px;border:1px solid rgba(16,24,40,0.08);background:white;color:#1f2937;font-weight:700;cursor:pointer}
+.home-address-chip.active{background:var(--brand-soft);border-color:rgba(27,168,106,0.18)}
+.home-address-icon{font-size:18px}
+
+.region-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:0 16px 16px}
+.region-grid.hidden{display:none}
+.region-chip{height:48px;border:1px solid rgba(16,24,40,0.08);border-radius:14px;background:white;color:#4b5563;font-weight:600;cursor:pointer}
+.region-chip.active{border-color:var(--primary);color:var(--primary);background:var(--brand-soft)}
+
+@media (max-width:420px){
+  .home-address-bar{flex-direction:column;padding:16px}
+  .region-grid{grid-template-columns:repeat(3,minmax(0,1fr));padding:0 16px 16px}
+}
+
+/* Section */
+.section{padding:8px 0}
+.section-title{margin:12px 16px 8px;font-size:16px}
+
+/* Cards */
+.cards{display:flex;gap:12px;overflow:auto;padding:0 16px 12px}
+.card{min-width:260px;background:white;border-radius:12px;box-shadow:0 2px 6px rgba(16,24,40,0.06);overflow:hidden}
+.card img{width:100%;height:140px;object-fit:cover}
+.card-body{padding:12px}
+.card-title{font-weight:700;margin:0 0 6px}
+.card-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.badge{background:#eef9f2;color:#0a8b5a;padding:4px 8px;border-radius:12px;font-size:12px}
+
+/* map container tweaks */
+#map{border-radius:12px}
+
+.cards{scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:12px}
+.card{transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease}
+.card.active{transform:translateY(-6px);box-shadow:0 12px 28px rgba(16,24,40,0.16);border:2px solid rgba(27,168,106,0.24)}
+
+/* Toast styles */
+.toast-container{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%, -50%);
+  z-index:1200;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width:min(92vw, 320px);
+  pointer-events:none;
+}
+.toast{
+  width:100%;
+  padding:12px 14px;
+  border-radius:14px;
+  color:white;
+  box-shadow:0 10px 24px rgba(0,0,0,0.18);
+  font-size:14px;
+  text-align:center;
+  animation:toast-in 180ms ease-out;
+}
+.toast.info{background:rgba(51,51,51,0.95)}
+.toast.success{background:rgba(27,168,106,0.95)}
+.toast.error{background:rgba(204,68,68,0.95)}
+
+@keyframes toast-in{
+  from {opacity:0; transform:translateY(6px) scale(0.98)}
+  to {opacity:1; transform:translateY(0) scale(1)}
+}
+
+
+/* Bottom nav */
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:100%;max-width:420px;padding:0 12px;pointer-events:none}
+.bottom-inner{background:rgba(255,255,255,0.96);height:64px;border-radius:30px;display:flex;align-items:center;justify-content:space-around;padding:0 18px;box-shadow:0 6px 18px rgba(16,24,40,0.08);pointer-events:auto}
+.nav-item{font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center}
+.ai-button{width:64px;height:64px;background:linear-gradient(180deg,#34c77d,#1ba86a);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:-34px;box-shadow:0 6px 18px rgba(0,0,0,0.12);}
+
+/* small tweaks */
+.section-title small{color:var(--muted);font-weight:400}
+
+/* improve horizontal scrolling */
+.cards{scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.card{scroll-snap-align:start}
+
+/* responsive tweaks */
+@media (max-width:420px){
+  .app{padding-bottom:110px}
+  .banner{padding:14px;border-radius:12px}
+  .banner h2{font-size:18px}
+  .mascot{width:76px;height:76px}
+  .icons-row{padding:10px 12px}
+  .icon-circle{width:48px;height:48px;border-radius:10px}
+  .location{margin:10px 12px;padding:8px 12px;border-radius:22px}
+  .card img{height:120px}
+  .card{min-width:220px}
+  .bottom-inner{height:60px;border-radius:28px;padding:0 12px}
+  .ai-button{width:58px;height:58px;margin-top:-30px}
+}
+
+@media (max-width:360px){
+  .banner h2{font-size:16px}
+  .mascot{width:64px;height:64px}
+  .card{min-width:200px}
+  .card img{height:100px}
+  .icon-label{font-size:11px}
+}
+
+@media (min-width:421px) and (max-width:768px){
+  .app{max-width:560px}
+  .card{min-width:320px}
+}
