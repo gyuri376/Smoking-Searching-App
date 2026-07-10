@@ -41,7 +41,7 @@ export default function MapView({ center, spots, onSelect, activeId }) {
   if (!center) return null
 
   return (
-    <div style={{ height: 280, borderRadius: 12, overflow: 'hidden', margin: '12px 16px' }}>
+    <div style={{ height: 280, borderRadius: 12, overflow: 'hidden' }}>
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={15}
