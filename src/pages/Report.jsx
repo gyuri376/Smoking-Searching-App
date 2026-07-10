@@ -1,26 +1,42 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import styles from './Report.module.css';
 
 export default function Report() {
-  const [desc, setDesc] = useState('')
-  const [type, setType] = useState('운영 여부')
-  const [address, setAddress] = useState('')
+  const [place, setPlace] = useState('')
+  const [status, setStatus] = useState('운영중')
   const [imagePreview, setImagePreview] = useState('')
+  const [features, setFeatures] = useState([])
+
+  const availableFeatures = ['지붕 있음', '의자 있음', '재떨이 있음', '환기 잘됨', '콘센트 있음']
+
+  const handleFeatureChange = (feature) => {
+    setFeatures((prev) =>
+      prev.includes(feature)
+        ? prev.filter((f) => f !== feature)
+        : [...prev, feature]
+    )
+  }
 
   const submit = () => {
+    if (!place.trim()) {
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: '흡연 장소 위치를 입력해 주세요.', type: 'error' } }))
+      return
+    }
     const reports = JSON.parse(window.localStorage.getItem('reports') || '[]')
     reports.unshift({
       id: Date.now(),
-      type,
-      desc,
-      address,
+      place,
+      status,
+      features,
       image: imagePreview,
       created: new Date().toISOString(),
     })
     window.localStorage.setItem('reports', JSON.stringify(reports))
     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: '제보가 접수되었습니다. 감사합니다.', type: 'success' } }))
-    setDesc('')
-    setAddress('')
+    setPlace('')
+    setStatus('운영중')
     setImagePreview('')
+    setFeatures([])
   }
 
   const handleImage = (e) => {
@@ -32,41 +48,64 @@ export default function Report() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ background: 'linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%)', borderRadius: 16, padding: 16, border: '1px solid #dcecff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: '#0a86f3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 20 }}>📣</div>
-          <div>
-            <h3 style={{ margin: 0 }}>장소 제보</h3>
-            <div style={{ color: '#6b778c', fontSize: 13 }}>새로 찾은 흡연구역의 이미지와 주소를 공유해주세요</div>
+    <div className={styles.container}>
+      <div className={styles.formWrapper}>
+        <div className={styles.header}>
+          <div className={styles.headerIcon}>📍</div>
+          <div className={styles.headerText}>
+            <h3>새로운 흡연 장소 제보</h3>
+            <div>발견하신 흡연 장소의 정보를 공유해 주세요.</div>
           </div>
         </div>
 
-        <div style={{ marginTop: 8 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>제보 종류</label>
-          <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #dcecff', borderRadius: 10, background: 'white' }}>
-            <option>운영 여부</option>
-            <option>혼잡도</option>
-            <option>장소 상태</option>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>흡연 장소 위치</label>
+          <input
+            value={place}
+            onChange={(e) => setPlace(e.target.value)}
+            placeholder="예: 인동동 행정복지센터 앞 흡연부스"
+            className={styles.input}
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.label}>흡연 장소 상태</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className={styles.select}
+          >
+            <option>운영중</option>
+            <option>폐쇄됨</option>
+            <option>혼잡</option>
+            <option>청결하지 않음</option>
           </select>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>장소 주소</label>
-          <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="예: 대구광역시 구미시 인동동 123" style={{ width: '100%', padding: '10px 12px', border: '1px solid #dcecff', borderRadius: 10, background: 'white' }} />
+        <div className={styles.formGroup}>
+          <label className={styles.featureLabel}>특징 (중복 선택 가능)</label>
+          <div className={styles.featureButtons}>
+            {availableFeatures.map((feature) => (
+              <button
+                key={feature}
+                type="button"
+                onClick={() => handleFeatureChange(feature)}
+                className={`${styles.featureButton} ${features.includes(feature) ? styles.active : ''}`}
+              >
+                {feature}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>설명</label>
-          <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} placeholder="예: 주변에 쓰레기가 많아요 / 시설이 파손되었어요" style={{ width: '100%', padding: '10px 12px', border: '1px solid #dcecff', borderRadius: 10, resize: 'vertical', background: 'white' }} />
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>장소 사진</label>
-          <label style={{ display: 'block', border: imagePreview ? '1px solid #dcecff' : '1px dashed #9ec8ff', borderRadius: 12, padding: 16, textAlign: 'center', background: 'white', cursor: 'pointer', transition: 'all 0.2s ease', overflow: 'hidden' }}>
+        <div className={styles.formGroup}>
+          <label className={styles.label}>흡연 장소 이미지</label>
+          <label
+            className={`${styles.imageUploadLabel} ${imagePreview ? styles.hasImage : ''}`}
+          >
             {imagePreview ? (
-              <div style={{ position: 'relative' }}>
-                <img src={imagePreview} alt="preview" style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }} />
+              <div className={styles.imagePreviewWrapper}>
+                <img src={imagePreview} alt="preview" className={styles.imagePreview} />
                 <button
                   type="button"
                   onClick={(e) => {
@@ -74,23 +113,25 @@ export default function Report() {
                     e.stopPropagation()
                     setImagePreview('')
                   }}
-                  style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: 999, padding: '6px 8px', cursor: 'pointer' }}
+                  className={styles.deleteImageButton}
                   aria-label="이미지 삭제"
                 >✕</button>
               </div>
             ) : (
               <>
-                <div style={{ fontSize: 26 }}>📷</div>
-                <div style={{ fontSize: 13, color: '#6b778c', marginTop: 6, lineHeight: 1.5 }}>이미지 추가 (권장) — 장소 식별에 도움이 됩니다</div>
+                <div className={styles.uploadPlaceholderIcon}>📷</div>
+                <div className={styles.uploadPlaceholderText}>
+                  장소를 더 정확하게 전달하려면 사진을 추가하세요.
+                </div>
               </>
             )}
-            <input type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
+            <input type="file" accept="image/*" onChange={handleImage} className={styles.hiddenInput} />
           </label>
         </div>
 
-        <div style={{ marginTop: 14 }}>
-          <button onClick={submit} style={{ width: '100%', padding: 12, background: '#0a86f3', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700 }}>제보 제출</button>
-        </div>
+        <button onClick={submit} className={styles.submitButton}>
+          제보하기
+        </button>
       </div>
     </div>
   )

@@ -1,7 +1,10 @@
 import React from 'react'
 import Link from 'next/link'
+import { useAppContext } from '../context/AppContext'
 
 export default function Header(){
+  const { user } = useAppContext()
+
   return (
     <header className="topbar">
       <div className="menu" aria-hidden="true">
@@ -21,13 +24,14 @@ export default function Header(){
         </span>
         <Link href="/mypage" passHref>
           <button
-            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: 'inherit' }}
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
             aria-label="마이페이지"
           >
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
             </svg>
+            {user?.nickname && <span style={{ fontSize: 13, fontWeight: 700 }}>{user.nickname}</span>}
           </button>
         </Link>
       </div>
