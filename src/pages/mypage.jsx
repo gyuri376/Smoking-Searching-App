@@ -26,10 +26,10 @@ export default function MyPage() {
 
   useEffect(() => {
     if (!router.isReady) return
-    const code = router.query.code
+    const { code } = router.query
     if (!code || authToken || hasHandledCode.current) return
 
-    const authorizationCode = Array.isArray(code) ? code[0] : code
+    const authorizationCode = Array.isArray(code) ? code[0] : code;
     if (!authorizationCode) return
 
     hasHandledCode.current = true
@@ -71,12 +71,12 @@ export default function MyPage() {
           setStatus('error')
           setMessage(error.message || '카카오 로그인 중 오류가 발생했습니다.')
         })
-  }, [authToken, login, redirectUri, router])
-
+  }, [authToken, login, router.isReady, router.query, router.replace])
+  
   const isLoggedIn = Boolean(authToken)
 
   return (
-      <div style={{ padding: '24px 16px 40px', minHeight: 'calc(100vh - 90px)', background: '#f2fbf7' }}>
+      <div style={{ padding: '24px 16px 40px', background: '#f2fbf7' }}>
         <div style={{ maxWidth: 420, margin: '0 auto' }}>
           <h1 style={{ margin: '0 0 28px', fontSize: 28, fontWeight: 800, textAlign: 'center' }}>로그인</h1>
 
