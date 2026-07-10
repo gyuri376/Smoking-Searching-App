@@ -26,8 +26,12 @@ export default function CardList({spots = [], activeId, onSelect}){
           <div className="card-body">
             <h4 className="card-title">{s.title}</h4>
             <div className="card-meta">
-              <span className="badge">{s.distance}</span>
-              <span style={{color:'#7b8aa3',fontSize:13}}>{s.status}</span>
+              <span>{s.distance}</span>
+              <span aria-hidden="true">·</span>
+              <span className="card-status">
+                <span className="status-dot" aria-hidden="true"></span>
+                {s.status}
+              </span>
             </div>
           </div>
         </article>

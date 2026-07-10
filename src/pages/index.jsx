@@ -5,11 +5,55 @@ import CardList from '../components/CardList'
 import { fetchNearbySmokingAreas } from '../api'
 import { useAppContext } from '../context/AppContext'
 
+const iconProps = {
+  width: 22,
+  height: 22,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round'
+}
+
 const homeIcons = [
-  { emoji: '🚬', label: '흡연부스' },
-  { emoji: '🅿️', label: '주차장' },
-  { emoji: '☕', label: '휴식공간' },
-  { emoji: '🚌', label: '대중교통' }
+  {
+    label: '흡연부스',
+    icon: (
+      <svg {...iconProps}>
+        <rect x="4" y="4" width="16" height="16" rx="4" />
+      </svg>
+    )
+  },
+  {
+    label: '주차장',
+    icon: (
+      <svg {...iconProps}>
+        <rect x="4" y="4" width="16" height="16" rx="8" />
+        <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor" stroke="none">
+          P
+        </text>
+      </svg>
+    )
+  },
+  {
+    label: '휴식공간',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M5 9h11a3 3 0 010 6h-1" />
+        <path d="M5 9v7a2 2 0 002 2h6a2 2 0 002-2V9" />
+        <path d="M5 9V7a1 1 0 011-1h6a1 1 0 011 1v2" />
+      </svg>
+    )
+  },
+  {
+    label: '대중교통',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-4 4v-4a2 2 0 01-2-2V6z" />
+      </svg>
+    )
+  }
 ]
 
 export default function HomePage() {
@@ -39,7 +83,7 @@ export default function HomePage() {
     <div>
       <div className="home-address-bar">
         <button
-          className={`home-address-chip ${showRegionList ? 'active' : ''}`}
+          className={`home-address-chip location ${showRegionList ? 'active' : ''}`}
           onClick={() => setShowRegionList((prev) => !prev)}
           type="button"
         >
@@ -78,7 +122,7 @@ export default function HomePage() {
       <div className="icons-row">
         {homeIcons.map((item) => (
           <div key={item.label} className="icon-item">
-            <div className="icon-circle">{item.emoji}</div>
+            <div className="icon-circle">{item.icon}</div>
             <div className="icon-label">{item.label}</div>
           </div>
         ))}

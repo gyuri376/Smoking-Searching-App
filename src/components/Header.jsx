@@ -1,33 +1,37 @@
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { useAppContext } from '../context/AppContext'
 
 export default function Header(){
-  const [imgError, setImgError] = useState(false)
   const { user } = useAppContext()
-  const logoSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#0A86F3"/><circle cx="60" cy="52" r="24" fill="#fff"/><path d="M43 72c8 8 26 8 34 0" stroke="#fff" stroke-width="8" stroke-linecap="round"/><path d="M52 36c8-6 16-6 24 0" stroke="#0A86F3" stroke-width="8" stroke-linecap="round"/></svg>`)}`
 
   return (
     <header className="topbar">
-      <div className="menu">☰</div>
-      <div className={`logo ${imgError ? 'no-image' : ''}`}>
-        <div className="mark">
-          {!imgError && (
-            <img
-              src={logoSvg}
-              alt="여기흡연"
-              className="app-logo"
-              onError={() => setImgError(true)}
-            />
-          )}
-        </div>
+      <div className="menu" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </div>
+      <div className="logo">
         <div className="logo-text">여기흡연</div>
       </div>
       <div className="icons">
-        <span style={{fontSize:18}}>🔍</span>
+        <span aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M21 21l-4.3-4.3" />
+          </svg>
+        </span>
         <Link href="/mypage" passHref>
-          <button style={{border:'none',background:'transparent',fontSize:18,cursor:'pointer'}}>
-            {user?.nickname ? `👤 ${user.nickname}` : '👤'}
+          <button
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
+            aria-label="마이페이지"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
+            {user?.nickname && <span style={{ fontSize: 13, fontWeight: 700 }}>{user.nickname}</span>}
           </button>
         </Link>
       </div>
