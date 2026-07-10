@@ -9,3 +9,7 @@ export async function fetchNearbySmokingAreas(lat, lng, radiusMeters = 1000){
   await new Promise(r=>setTimeout(r,400))
   return spots
 }
+
+export function createAuthHeaders(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}

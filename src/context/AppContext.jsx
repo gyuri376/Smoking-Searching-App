@@ -20,16 +20,38 @@ export function AppProvider({ children }) {
       return []
     }
   })
+  const [authToken, setAuthToken] = useState(null)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('favorites', JSON.stringify(favorites))
-  }, [favorites])
+    try {
+      const savedToken = window.localStorage.getItem('authToken')
+      const savedUser = window.localStorage.getItem('authUser')
+      if (savedToken) setAuthToken(savedToken)
+      if (savedUser) setUser(JSON.parse(savedUser))
+    } catch {
+      // ignore parse errors
+    }
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    window.localStorage.setItem('recentSpots', JSON.stringify(recentSpots))
-  }, [recentSpots])
+    if (authToken) {
+      window.localStorage.setItem('authToken', authToken)
+    } else {
+      window.localStorage.removeItem('authToken')
+    }
+  }, [authToken])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (user) {
+      window.localStorage.setItem('authUser', JSON.stringify(user))
+    } else {
+      window.localStorage.removeItem('authUser')
+    }
+  }, [user])
 
   useEffect(() => {
     if (!selected) return
@@ -60,6 +82,16 @@ export function AppProvider({ children }) {
     setRecentSpots([])
   }
 
+  const login = (token, userData) => {
+    setAuthToken(token)
+    setUser(userData || null)
+  }
+
+  const logout = () => {
+    setAuthToken(null)
+    setUser(null)
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -70,6 +102,10 @@ export function AppProvider({ children }) {
         removeFavorite,
         recentSpots,
         clearRecent,
+        authToken,
+        user,
+        login,
+        logout,
       }}
     >
       {children}
