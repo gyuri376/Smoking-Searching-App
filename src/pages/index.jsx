@@ -1,4 +1,5 @@
 import React from 'react'
+import { useRouter } from 'next/router'
 import Banner from '../components/Banner'
 import LocationSelector from '../components/LocationSelector'
 import CardList from '../components/CardList'
@@ -16,48 +17,52 @@ const iconProps = {
   strokeLinejoin: 'round'
 }
 
-const homeIcons = [
+const homeShortcuts = [
   {
-    label: '흡연부스',
+    label: '지도에서 보기',
+    path: '/map',
     icon: (
       <svg {...iconProps}>
-        <rect x="4" y="4" width="16" height="16" rx="4" />
+        <path d="M9 4L4 6.5v13L9 17l6 2.5 5-2.5v-13L15 6l-6-2z" />
+        <path d="M9 4v13M15 6v13.5" />
       </svg>
     )
   },
   {
-    label: '주차장',
+    label: '즐겨찾기',
+    path: '/mypage',
     icon: (
-      <svg {...iconProps}>
-        <rect x="4" y="4" width="16" height="16" rx="8" />
-        <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="700" fill="currentColor" stroke="none">
-          P
-        </text>
+      <svg {...iconProps} fill="currentColor" stroke="none">
+        <path d="M12 3.5l2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.6-4.1 6.1-.6z" />
       </svg>
     )
   },
   {
-    label: '휴식공간',
+    label: '제보하기',
+    path: '/report',
     icon: (
       <svg {...iconProps}>
-        <path d="M5 9h11a3 3 0 010 6h-1" />
-        <path d="M5 9v7a2 2 0 002 2h6a2 2 0 002-2V9" />
-        <path d="M5 9V7a1 1 0 011-1h6a1 1 0 011 1v2" />
+        <path d="M12 21s-7-5.7-7-11a7 7 0 0114 0c0 5.3-7 11-7 11z" />
+        <circle cx="12" cy="10" r="2.5" />
       </svg>
     )
   },
   {
-    label: '대중교통',
+    label: '최근기록',
+    path: '/recent',
     icon: (
       <svg {...iconProps}>
-        <path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-4 4v-4a2 2 0 01-2-2V6z" />
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 8v4l3 2" />
       </svg>
     )
   }
 ]
 
 export default function HomePage() {
+  const router = useRouter()
   const [spots, setSpots] = React.useState([])
+  const [spotsLoading, setSpotsLoading] = React.useState(true)
   const [selectedRegion, setSelectedRegion] = React.useState('대구')
   const [showRegionList, setShowRegionList] = React.useState(false)
   const [mascotError, setMascotError] = React.useState(false)
@@ -74,7 +79,11 @@ export default function HomePage() {
   React.useEffect(() => {
     const lat = 36.116
     const lng = 128.344
-    fetchNearbySmokingAreas(lat, lng).then(setSpots)
+    setSpotsLoading(true)
+    fetchNearbySmokingAreas(lat, lng).then((data) => {
+      setSpots(data)
+      setSpotsLoading(false)
+    })
   }, [])
 
   const safeRegion = selectedRegion || '대구'
@@ -120,8 +129,13 @@ export default function HomePage() {
 
       <Banner />
       <div className="icons-row">
-        {homeIcons.map((item) => (
-          <div key={item.label} className="icon-item">
+        {homeShortcuts.map((item) => (
+          <div
+            key={item.label}
+            className="icon-item"
+            onClick={() => router.push(item.path)}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="icon-circle">{item.icon}</div>
             <div className="icon-label">{item.label}</div>
           </div>
@@ -139,7 +153,11 @@ export default function HomePage() {
             />
           )}
         </div>
-        <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+        {spotsLoading ? (
+          <p className="list-loading">불러오는 중...</p>
+        ) : (
+          <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+        )}
       </section>
     </div>
   )

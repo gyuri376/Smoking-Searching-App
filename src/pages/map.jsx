@@ -11,11 +11,16 @@ export default function MapPage() {
   const [permissionState, setPermissionState] = useState('idle')
   const [position, setPosition] = useState(null)
   const [spots, setSpots] = useState([])
+  const [spotsLoading, setSpotsLoading] = useState(false)
   const { selected, setSelected } = useAppContext()
 
   useEffect(() => {
     if (!position) return
-    fetchNearbySmokingAreas(position.lat, position.lng).then(setSpots)
+    setSpotsLoading(true)
+    fetchNearbySmokingAreas(position.lat, position.lng).then((data) => {
+      setSpots(data)
+      setSpotsLoading(false)
+    })
   }, [position])
 
   const requestLocation = () => {
@@ -68,7 +73,11 @@ export default function MapPage() {
                 </svg>
               </button>
             </div>
-            <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+            {spotsLoading ? (
+              <p className="list-loading">불러오는 중...</p>
+            ) : (
+              <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+            )}
           </>
         )}
       </section>

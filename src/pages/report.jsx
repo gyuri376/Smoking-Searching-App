@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-
-const availableFeatures = ['지붕 있음', '의자 있음', '재떨이 있음', '환기 잘됨', '콘센트 있음']
+import { SPOT_FEATURES } from '../api'
 
 export default function Report() {
   const [place, setPlace] = useState('')
@@ -80,7 +79,7 @@ export default function Report() {
         <div className="form-group">
           <label className="form-label">특징 (중복 선택 가능)</label>
           <div className="report-feature-row">
-            {availableFeatures.map((feature) => (
+            {SPOT_FEATURES.map((feature) => (
               <button
                 key={feature}
                 type="button"

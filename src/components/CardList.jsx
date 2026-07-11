@@ -12,6 +12,10 @@ export default function CardList({spots = [], activeId, onSelect}){
     }
   },[activeId])
 
+  if (spots.length === 0) {
+    return <p className="recent-empty">주변에 등록된 흡연구역이 없습니다.</p>
+  }
+
   return (
     <div className="cards" ref={containerRef}>
       {spots.map(s=> (
