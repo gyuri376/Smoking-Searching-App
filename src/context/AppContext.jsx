@@ -4,27 +4,23 @@ const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
   const [selected, setSelected] = useState(null)
-  const [favorites, setFavorites] = useState(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      return JSON.parse(window.localStorage.getItem('favorites') || '[]')
-    } catch {
-      return []
-    }
-  })
-  const [recentSpots, setRecentSpots] = useState(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      return JSON.parse(window.localStorage.getItem('recentSpots') || '[]')
-    } catch {
-      return []
-    }
-  })
+  const [favorites, setFavorites] = useState([])
+  const [recentSpots, setRecentSpots] = useState([])
   const [authToken, setAuthToken] = useState(null)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    try {
+      setFavorites(JSON.parse(window.localStorage.getItem('favorites') || '[]'))
+    } catch {
+      setFavorites([])
+    }
+    try {
+      setRecentSpots(JSON.parse(window.localStorage.getItem('recentSpots') || '[]'))
+    } catch {
+      setRecentSpots([])
+    }
     try {
       const savedToken = window.localStorage.getItem('authToken')
       const savedUser = window.localStorage.getItem('authUser')

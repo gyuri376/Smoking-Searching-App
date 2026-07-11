@@ -1,10 +1,36 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAppContext } from '../context/AppContext'
+import CardList from '../components/CardList'
+import { fetchNearbySmokingAreas } from '../api'
 
 export default function MyPage() {
   const router = useRouter()
-  const { authToken, user, login, logout } = useAppContext()
+  const { authToken, user, login, logout, favorites, selected, setSelected } = useAppContext()
+  const [nearbyPermission, setNearbyPermission] = useState('idle')
+  const [nearbyPosition, setNearbyPosition] = useState(null)
+  const [nearbySpots, setNearbySpots] = useState([])
+
+  useEffect(() => {
+    if (!nearbyPosition) return
+    fetchNearbySmokingAreas(nearbyPosition.lat, nearbyPosition.lng).then(setNearbySpots)
+  }, [nearbyPosition])
+
+  const requestNearbyLocation = () => {
+    setNearbyPermission('requesting')
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setNearbyPermission('denied')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setNearbyPermission('granted')
+        setNearbyPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      },
+      () => setNearbyPermission('denied'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
   const [status, setStatus] = useState('idle')
   const [message, setMessage] = useState('카카오 로그인을 통해 제보 및 개인정보 기능을 사용할 수 있습니다.')
   const [userId, setUserId] = useState('')
@@ -169,6 +195,44 @@ export default function MyPage() {
               </div>
           )}
         </div>
+
+        <section className="mypage-section">
+          <h3 className="mypage-section-title">자주 간 흡연구역</h3>
+          {favorites.length === 0 ? (
+            <p className="recent-empty">즐겨찾기한 흡연구역이 없습니다.</p>
+          ) : (
+            <CardList spots={favorites} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+          )}
+        </section>
+
+        <section className="mypage-section">
+          <h3 className="mypage-section-title">내 주변 흡연구역</h3>
+          {nearbyPermission !== 'granted' && (
+            <div className="map-permission">
+              <div className="map-permission-icon" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21s-7-5.7-7-11a7 7 0 0114 0c0 5.3-7 11-7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </div>
+              <p>
+                위치 권한을 허용하면
+                <br />
+                내 주변 흡연구역을 확인할 수 있습니다.
+              </p>
+              <button onClick={requestNearbyLocation} className="map-permission-btn" type="button">
+                위치 허용
+              </button>
+            </div>
+          )}
+          {nearbyPermission === 'granted' && (
+            nearbySpots.length === 0 ? (
+              <p className="recent-empty">주변에 등록된 흡연구역이 없습니다.</p>
+            ) : (
+              <CardList spots={nearbySpots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+            )
+          )}
+        </section>
       </div>
   )
 }
