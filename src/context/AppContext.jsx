@@ -1,26 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { addBookmark, removeBookmark, fetchFavoriteSmokingAreas } from '../api'
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
   const [selected, setSelected] = useState(null)
   const [favorites, setFavorites] = useState([])
-  const [recentSpots, setRecentSpots] = useState([])
   const [authToken, setAuthToken] = useState(null)
   const [user, setUser] = useState(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    try {
-      setFavorites(JSON.parse(window.localStorage.getItem('favorites') || '[]'))
-    } catch {
-      setFavorites([])
-    }
-    try {
-      setRecentSpots(JSON.parse(window.localStorage.getItem('recentSpots') || '[]'))
-    } catch {
-      setRecentSpots([])
-    }
     try {
       const savedToken = window.localStorage.getItem('authToken')
       const savedUser = window.localStorage.getItem('authUser')
@@ -30,6 +20,16 @@ export function AppProvider({ children }) {
       // ignore parse errors
     }
   }, [])
+
+  useEffect(() => {
+    if (!authToken) {
+      setFavorites([])
+      return
+    }
+    fetchFavoriteSmokingAreas(authToken)
+      .then(setFavorites)
+      .catch(() => setFavorites([]))
+  }, [authToken])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -49,33 +49,38 @@ export function AppProvider({ children }) {
     }
   }, [user])
 
-  useEffect(() => {
-    if (!selected) return
-    setRecentSpots((prev) => {
-      const filtered = prev.filter((item) => item.id !== selected.id)
-      return [selected, ...filtered].slice(0, 8)
-    })
-  }, [selected])
+  const notify = (message, type) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, type } }))
+    }
+  }
 
-  const addFavorite = (spot) => {
-    if (favorites.find((f) => f.id === spot.id)) {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: '이미 즐겨찾기에 추가되어 있습니다.', type: 'info' } }))
-      }
+  const addFavorite = async (spot) => {
+    if (!authToken) {
+      notify('로그인 후 이용해주세요.', 'info')
       return
     }
-    setFavorites((prev) => [spot, ...prev])
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: '즐겨찾기에 추가되었습니다.', type: 'success' } }))
+    if (favorites.find((f) => f.id === spot.id)) {
+      notify('이미 즐겨찾기에 추가되어 있습니다.', 'info')
+      return
+    }
+    try {
+      await addBookmark(authToken, spot.id)
+      setFavorites((prev) => [spot, ...prev])
+      notify('즐겨찾기에 추가되었습니다.', 'success')
+    } catch {
+      notify('즐겨찾기 추가에 실패했습니다.', 'error')
     }
   }
 
-  const removeFavorite = (id) => {
-    setFavorites((prev) => prev.filter((f) => f.id !== id))
-  }
-
-  const clearRecent = () => {
-    setRecentSpots([])
+  const removeFavorite = async (id) => {
+    if (!authToken) return
+    try {
+      await removeBookmark(authToken, id)
+      setFavorites((prev) => prev.filter((f) => f.id !== id))
+    } catch {
+      notify('즐겨찾기 삭제에 실패했습니다.', 'error')
+    }
   }
 
   const login = (token, userData) => {
@@ -96,8 +101,6 @@ export function AppProvider({ children }) {
         favorites,
         addFavorite,
         removeFavorite,
-        recentSpots,
-        clearRecent,
         authToken,
         user,
         login,

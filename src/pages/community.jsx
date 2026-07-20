@@ -1,48 +1,88 @@
 import React, { useState } from 'react'
-import { SPOT_FEATURES } from '../api'
+import { submitReport, attachReportImage, getUserIdFromToken } from '../api'
+import { useAppContext } from '../context/AppContext'
 
-// report.jsx의 제보 폼을 여기에 통합합니다.
-function ReportForm() {
-  const [place, setPlace] = useState('')
-  const [status, setStatus] = useState('운영중')
-  const [features, setFeatures] = useState([])
+function notify(message, type) {
+  window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, type } }))
+}
 
-  const handleFeatureChange = (feature) => {
-    setFeatures((prev) =>
-      prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature]
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      reject(new Error('위치 정보를 사용할 수 없습니다.'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => reject(new Error('위치 권한이 필요합니다.')),
+      { enableHighAccuracy: true, timeout: 10000 }
     )
-  }
+  })
+}
 
-  const submit = () => {
-    alert('리뷰/제보가 등록되었습니다 (구현 예정).')
+// 새 흡연구역 제보 폼. 현재는 신규 장소 제보(NEW_SMOKING_AREA)만 지원합니다.
+function ReportForm() {
+  const { authToken } = useAppContext()
+  const [place, setPlace] = useState('')
+  const [address, setAddress] = useState('')
+  const [image, setImage] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const submit = async () => {
+    if (!authToken) {
+      notify('로그인 후 이용해주세요.', 'info')
+      return
+    }
+    if (!place.trim() || !address.trim()) {
+      notify('장소명과 주소를 입력해 주세요.', 'error')
+      return
+    }
+    const userId = getUserIdFromToken(authToken)
+    setSubmitting(true)
+    try {
+      const position = await getCurrentPosition()
+      const report = await submitReport(authToken, userId, {
+        reportType: 'NEW_SMOKING_AREA',
+        suggestedName: place,
+        address,
+        latitude: position.lat,
+        longitude: position.lng,
+        reporterLatitude: position.lat,
+        reporterLongitude: position.lng,
+      })
+      if (image) {
+        await attachReportImage(authToken, userId, report.reportId, image)
+      }
+      notify('제보가 등록되었습니다. 감사합니다!', 'success')
+      setPlace('')
+      setAddress('')
+      setImage(null)
+    } catch (error) {
+      notify(error.message || '제보 등록 중 오류가 발생했습니다.', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <div className="report-card" style={{ marginBottom: 24 }}>
-      <h3 className="report-title">리뷰 작성 / 신규 장소 제보</h3>
+      <h3 className="report-title">신규 흡연구역 제보</h3>
+      <p className="report-subtitle">현재 위치를 해당 흡연구역의 위치로 등록합니다.</p>
       <div className="form-group">
-        <label className="form-label">장소</label>
-        <input className="form-input" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="예: 구미역 앞" />
+        <label className="form-label">장소명</label>
+        <input className="form-input" value={place} onChange={(e) => setPlace(e.target.value)} placeholder="예: 구미역 앞 흡연부스" />
       </div>
       <div className="form-group">
-        <label className="form-label">평점</label>
-        <div>⭐⭐⭐⭐⭐</div>
+        <label className="form-label">주소</label>
+        <input className="form-input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="예: 경상북도 구미시 원평동 123" />
       </div>
       <div className="form-group">
-        <label className="form-label">특징</label>
-        <div className="report-feature-row">
-          {SPOT_FEATURES.map((feature) => (
-            <button key={feature} type="button" onClick={() => handleFeatureChange(feature)} className={`report-feature-btn${features.includes(feature) ? ' active' : ''}`}>
-              {feature}
-            </button>
-          ))}
-        </div>
+        <label className="form-label">사진 업로드 (선택)</label>
+        <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
       </div>
-      <div className="form-group">
-        <label className="form-label">사진 업로드</label>
-        <input type="file" accept="image/*" />
-      </div>
-      <button onClick={submit} className="report-submit-btn" type="button">등록하기</button>
+      <button onClick={submit} className="report-submit-btn" type="button" disabled={submitting}>
+        {submitting ? '등록 중...' : '등록하기'}
+      </button>
     </div>
   )
 }
