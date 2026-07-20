@@ -13,12 +13,17 @@ export default function Header(){
         <div className="logo-text">여기흡연</div>
       </div>
       <div className="icons">
-        <span aria-hidden="true">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-        </span>
+        <Link href="/search" passHref>
+          <button
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center' }}
+            aria-label="검색"
+          >
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+          </button>
+        </Link>
         <Link href="/mypage" passHref>
           <button
             style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
