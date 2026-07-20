@@ -1,27 +1,15 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
+﻿﻿﻿﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useAppContext } from '../context/AppContext'
-import CardList from '../components/CardList'
 
 export default function MyPage() {
   const router = useRouter()
-  const { authToken, user, login, logout, favorites, selected, setSelected } = useAppContext()
+  const { authToken, user, login, logout } = useAppContext()
   const [status, setStatus] = useState('idle')
   const [message, setMessage] = useState('카카오 로그인을 통해 제보 및 개인정보 기능을 사용할 수 있습니다.')
   const [userId, setUserId] = useState('')
   const [password, setPassword] = useState('')
-  const [rememberId, setRememberId] = useState(false)
-  const [keepLogin, setKeepLogin] = useState(false)
-  const [myReports, setMyReports] = useState([])
   const hasHandledCode = useRef(false)
-
-  useEffect(() => {
-    try {
-      setMyReports(JSON.parse(window.localStorage.getItem('reports') || '[]'))
-    } catch {
-      setMyReports([])
-    }
-  }, [])
 
   // 1. 카카오 로그인을 완료하고 돌아올 프론트엔드 화면 주소 (/mypage)
   const redirectUri = useMemo(() => {
@@ -86,7 +74,7 @@ export default function MyPage() {
   const isLoggedIn = Boolean(authToken)
 
   return (
-      <div style={{ padding: '24px 16px 40px', background: '#f2fbf7' }}>
+      <div style={{ padding: '24px 16px 80px', background: '#f2fbf7' }}>
         <div style={{ maxWidth: 420, margin: '0 auto' }}>
           <h1 style={{ margin: '0 0 28px', fontSize: 28, fontWeight: 800, textAlign: 'center' }}>로그인</h1>
 
@@ -143,18 +131,8 @@ export default function MyPage() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, color: '#64748b', fontSize: 13 }}>
                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <input type="checkbox" checked={rememberId} onChange={() => setRememberId((prev) => !prev)} />
-                      아이디저장
+                      {/* 기능 제거: 아이디 저장, 로그인 유지 등 */}
                     </label>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <input type="checkbox" checked={keepLogin} onChange={() => setKeepLogin((prev) => !prev)} />
-                      로그인유지
-                    </label>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, color: '#94a3b8', fontSize: 13 }}>
-                    <button type="button" style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}>아이디 찾기</button>
-                    <button type="button" style={{ background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}>비밀번호 찾기</button>
                   </div>
 
                   <div style={{ marginTop: 26, borderTop: '1px solid #e2e8f0', paddingTop: 18, color: '#475569', fontSize: 13, textAlign: 'center' }}>
@@ -179,45 +157,6 @@ export default function MyPage() {
               </div>
           )}
         </div>
-
-        <section className="mypage-section">
-          <h3 className="mypage-section-title">자주 간 흡연구역</h3>
-          {favorites.length === 0 ? (
-            <p className="recent-empty">즐겨찾기한 흡연구역이 없습니다.</p>
-          ) : (
-            <CardList spots={favorites} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
-          )}
-        </section>
-
-        <section className="mypage-section">
-          <h3 className="mypage-section-title">내 제보 내역</h3>
-          {myReports.length === 0 ? (
-            <p className="recent-empty">아직 제보한 내역이 없습니다.</p>
-          ) : (
-            <div className="cards">
-              {myReports.map((r) => (
-                <article key={r.id} className="card">
-                  <img src={r.image || 'https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=800&q=60'} alt="thumb" />
-                  <div className="card-body">
-                    <h4 className="card-title">{r.place}</h4>
-                    <div className="card-meta">
-                      <span>{r.status}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>{new Date(r.created).toLocaleDateString('ko-KR')}</span>
-                    </div>
-                    {r.features?.length > 0 && (
-                      <div className="report-feature-row" style={{ marginTop: 8 }}>
-                        {r.features.map((f) => (
-                          <span key={f} className="report-feature-btn active" style={{ cursor: 'default' }}>{f}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
       </div>
   )
 }

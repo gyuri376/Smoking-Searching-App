@@ -1,5 +1,4 @@
 import '../styles.css'
-import 'leaflet/dist/leaflet.css'
 import { AppProvider, useAppContext } from '../context/AppContext'
 import Header from '../components/Header'
 import BottomNav from '../components/BottomNav'

@@ -1,162 +1,114 @@
-import React from 'react'
-import { useRouter } from 'next/router'
-import Banner from '../components/Banner'
-import LocationSelector from '../components/LocationSelector'
+import React, { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { LoadScript } from '@react-google-maps/api'
 import CardList from '../components/CardList'
 import { fetchNearbySmokingAreas } from '../api'
 import { useAppContext } from '../context/AppContext'
 
-const iconProps = {
-  width: 22,
-  height: 22,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.8,
-  strokeLinecap: 'round',
-  strokeLinejoin: 'round'
-}
-
-const homeShortcuts = [
-  {
-    label: '지도에서 보기',
-    path: '/map',
-    icon: (
-      <svg {...iconProps}>
-        <path d="M9 4L4 6.5v13L9 17l6 2.5 5-2.5v-13L15 6l-6-2z" />
-        <path d="M9 4v13M15 6v13.5" />
-      </svg>
-    )
-  },
-  {
-    label: '즐겨찾기',
-    path: '/mypage',
-    icon: (
-      <svg {...iconProps} fill="currentColor" stroke="none">
-        <path d="M12 3.5l2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.6-4.1 6.1-.6z" />
-      </svg>
-    )
-  },
-  {
-    label: '제보하기',
-    path: '/report',
-    icon: (
-      <svg {...iconProps}>
-        <path d="M12 21s-7-5.7-7-11a7 7 0 0114 0c0 5.3-7 11-7 11z" />
-        <circle cx="12" cy="10" r="2.5" />
-      </svg>
-    )
-  },
-  {
-    label: '최근기록',
-    path: '/recent',
-    icon: (
-      <svg {...iconProps}>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 8v4l3 2" />
-      </svg>
-    )
-  }
-]
+const GoogleMapView = dynamic(() => import('../components/GoogleMapView'), { ssr: false })
 
 export default function HomePage() {
-  const router = useRouter()
-  const [spots, setSpots] = React.useState([])
-  const [spotsLoading, setSpotsLoading] = React.useState(true)
-  const [selectedRegion, setSelectedRegion] = React.useState('대구')
-  const [showRegionList, setShowRegionList] = React.useState(false)
-  const [mascotError, setMascotError] = React.useState(false)
+  const [permissionState, setPermissionState] = useState('idle')
+  const [position, setPosition] = useState(null)
+  const [spots, setSpots] = useState([])
+  const [spotsLoading, setSpotsLoading] = useState(false)
   const { selected, setSelected } = useAppContext()
-  const mascotSvg = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" rx="28" fill="#f6faff"/><circle cx="60" cy="52" r="24" fill="#0A86F3"/><circle cx="52" cy="50" r="3" fill="#fff"/><circle cx="68" cy="50" r="3" fill="#fff"/><path d="M48 68c4 6 20 6 24 0" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`)}`
+  const [isFilterOpen, setFilterOpen] = useState(false)
 
-  const regions = [
-    '서울','경기','인천','강원','충남',
-    '대전','충북','세종','부산','울산',
-    '대구','경북','경남','전남','광주',
-    '전북','제주','전국'
-  ]
-
-  React.useEffect(() => {
-    const lat = 36.116
-    const lng = 128.344
+  useEffect(() => {
+    if (!position) return
     setSpotsLoading(true)
-    fetchNearbySmokingAreas(lat, lng).then((data) => {
+    fetchNearbySmokingAreas(position.lat, position.lng).then((data) => {
       setSpots(data)
       setSpotsLoading(false)
     })
-  }, [])
+  }, [position])
 
-  const safeRegion = selectedRegion || '대구'
+  const requestLocation = () => {
+    setPermissionState('requesting')
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setPermissionState('denied')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPermissionState('granted')
+        setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+      },
+      () => setPermissionState('denied'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   return (
-    <div>
-      <div className="home-address-bar">
-        <button
-          className={`home-address-chip location ${showRegionList ? 'active' : ''}`}
-          onClick={() => setShowRegionList((prev) => !prev)}
-          type="button"
-        >
-          <span className="home-address-icon">📍</span>
-          <strong>{safeRegion}</strong>
-        </button>
-        <button
-          className={`home-address-chip ${safeRegion === '전체' ? 'active' : ''}`}
-          onClick={() => {
-            setSelectedRegion('전체')
-            setShowRegionList(false)
-          }}
-          type="button"
-        >
-          전체
-        </button>
-      </div>
-
-      <div className={`region-grid ${showRegionList ? '' : 'hidden'}`}>
-        {regions.map((region) => (
-          <button
-            key={region}
-            className={`region-chip ${region === safeRegion ? 'active' : ''}`}
-            onClick={() => {
-              setSelectedRegion(region)
-              setShowRegionList(false)
-            }}
-            type="button"
-          >
-            {region}
-          </button>
-        ))}
-      </div>
-
-      <Banner />
-      <div className="icons-row">
-        {homeShortcuts.map((item) => (
-          <div
-            key={item.label}
-            className="icon-item"
-            onClick={() => router.push(item.path)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="icon-circle">{item.icon}</div>
-            <div className="icon-label">{item.label}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
+      {/* 배너와 필터 (권한 없을 때만 표시) */}
+      {permissionState !== 'granted' && (
+        <>
+          <div style={{ padding: 12, background: '#f0f8ff', textAlign: 'center', fontSize: 14 }}>
+            폭염주의보! 지붕이 있는 시원한 흡연구역을 찾아보세요.
           </div>
-        ))}
-      </div>
-      <section className="recommendation-section" style={{ padding: 12 }}>
-        <div className="recommendation-header">
-          <h3>{safeRegion} AI 추천 흡연구역</h3>
-          {safeRegion === '구미' && !mascotError && (
-            <img
-              src={mascotSvg}
-              alt="마스코트"
-              className="mascot-recommendation"
-              onError={() => setMascotError(true)}
-            />
+          <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button onClick={() => setFilterOpen(true)} style={{ background: '#eee', border: 'none', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+              스마트 필터
+            </button>
+            <div style={{ position: 'relative' }}>
+              <span>⭐</span>
+              <span style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', width: 16, height: 16, borderRadius: '50%', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>N</span>
+            </div>
+          </div>
+          {isFilterOpen && (
+            <div style={{ padding: 12, border: '1px solid #ddd', margin: 12 }}>
+              <h3>스마트 필터 (구현 예정)</h3>
+              <button onClick={() => setFilterOpen(false)}>닫기</button>
+            </div>
           )}
-        </div>
-        {spotsLoading ? (
-          <p className="list-loading">불러오는 중...</p>
-        ) : (
-          <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+        </>
+      )}
+
+      <section style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {permissionState !== 'granted' && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+            <div className="map-permission">
+              <div className="map-permission-icon" aria-hidden="true">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 21s-7-5.7-7-11a7 7 0 0114 0c0 5.3-7 11-7 11z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
+              </div>
+              <p>
+                위치 권한을 허용하면
+                <br />
+                주변 흡연구역을 확인할 수 있습니다.
+              </p>
+              <button onClick={requestLocation} className="map-permission-btn" type="button">
+                위치 허용
+              </button>
+            </div>
+          </div>
+        )}
+
+        {permissionState === 'granted' && position && (
+          <>
+            <div className="map-wrap" style={{ flex: '0 0 45%', position: 'relative', margin: 0, borderRadius: '0 0 20px 20px' }}>
+              <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
+                <GoogleMapView center={position} spots={spots} onSelect={(s) => setSelected && setSelected(s)} activeId={selected && selected.id} />
+              </LoadScript>
+              <button className="map-locate-btn" type="button" onClick={requestLocation} aria-label="현재 위치로 이동">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                </svg>
+              </button>
+            </div>
+            <div style={{ flex: '1', overflow: 'auto', background: 'white', borderRadius: '20px 20px 0 0', marginTop: '-20px', paddingTop: '20px' }}>
+              {spotsLoading ? (
+                <p className="list-loading">불러오는 중...</p>
+              ) : (
+                <CardList spots={spots} activeId={selected && selected.id} onSelect={(s) => setSelected && setSelected(s)} />
+              )}
+            </div>
+          </>
         )}
       </section>
     </div>
