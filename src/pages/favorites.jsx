@@ -3,16 +3,7 @@ import { useAppContext } from '../context/AppContext'
 import CardList from '../components/CardList'
 
 export default function FavoritesPage() {
-  const { favorites, selected, setSelected, authToken } = useAppContext()
-
-  if (!authToken) {
-    return (
-      <div style={{ padding: 20, textAlign: 'center', paddingBottom: '70px' }}>
-        <h2>로그인 필요</h2>
-        <p>즐겨찾기 기능을 사용하려면 로그인이 필요합니다.</p>
-      </div>
-    )
-  }
+  const { favorites, selected, setSelected } = useAppContext()
 
   return (
     <div style={{ padding: 12, paddingBottom: '70px' }}>

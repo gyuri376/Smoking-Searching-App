@@ -1,6 +1,4 @@
 import React, { useState } from 'react'
-import { submitReport, attachReportImage, getUserIdFromToken } from '../api'
-import { useAppContext } from '../context/AppContext'
 
 function notify(message, type) {
   window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, type } }))
@@ -20,39 +18,42 @@ function getCurrentPosition() {
   })
 }
 
-// 새 흡연구역 제보 폼. 현재는 신규 장소 제보(NEW_SMOKING_AREA)만 지원합니다.
+function readImageAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// 새 흡연구역 제보 폼. 백엔드 연동 없이 브라우저 localStorage에 저장합니다.
 function ReportForm() {
-  const { authToken } = useAppContext()
   const [place, setPlace] = useState('')
   const [address, setAddress] = useState('')
   const [image, setImage] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
   const submit = async () => {
-    if (!authToken) {
-      notify('로그인 후 이용해주세요.', 'info')
-      return
-    }
     if (!place.trim() || !address.trim()) {
       notify('장소명과 주소를 입력해 주세요.', 'error')
       return
     }
-    const userId = getUserIdFromToken(authToken)
     setSubmitting(true)
     try {
       const position = await getCurrentPosition()
-      const report = await submitReport(authToken, userId, {
-        reportType: 'NEW_SMOKING_AREA',
-        suggestedName: place,
+      const imageDataUrl = image ? await readImageAsDataUrl(image) : ''
+      const reports = JSON.parse(window.localStorage.getItem('reports') || '[]')
+      reports.unshift({
+        id: Date.now(),
+        place,
         address,
         latitude: position.lat,
         longitude: position.lng,
-        reporterLatitude: position.lat,
-        reporterLongitude: position.lng,
+        image: imageDataUrl,
+        created: new Date().toISOString(),
       })
-      if (image) {
-        await attachReportImage(authToken, userId, report.reportId, image)
-      }
+      window.localStorage.setItem('reports', JSON.stringify(reports))
       notify('제보가 등록되었습니다. 감사합니다!', 'success')
       setPlace('')
       setAddress('')
