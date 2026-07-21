@@ -53,7 +53,33 @@ async function fetchAllAreas() {
 // 흡연구역 목록 조회 (GET /api/smoking-areas, 인증 불필요)
 export async function fetchNearbySmokingAreas(lat, lng) {
   const areas = await fetchAllAreas()
-  return areas.map((area) => mapArea(area, lat, lng))
+  const localSpots = getLocalReportSpots(lat, lng)
+  return [...localSpots, ...areas.map((area) => mapArea(area, lat, lng))]
+}
+
+// 로컬(localStorage)에 저장된 제보를 목록/지도에 표시할 spot 형태로 변환
+export function getLocalReportSpots(fromLat, fromLng) {
+  if (typeof window === 'undefined') return []
+  let reports = []
+  try {
+    reports = JSON.parse(window.localStorage.getItem('reports') || '[]')
+  } catch {
+    return []
+  }
+  return reports.map((r) => ({
+    id: `report-${r.id}`,
+    title: r.place,
+    address: r.address,
+    lat: r.latitude,
+    lng: r.longitude,
+    distance: fromLat != null && fromLng != null && r.latitude != null && r.longitude != null
+      ? distanceLabel(fromLat, fromLng, r.latitude, r.longitude)
+      : '',
+    status: '제보됨',
+    crowd: '정보 없음',
+    info: r.address || '',
+    img: r.image || FALLBACK_IMG,
+  }))
 }
 
 export function createAuthHeaders(token) {
