@@ -20,18 +20,9 @@ function getCurrentPosition() {
   })
 }
 
-function readImageAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result)
-    reader.onerror = () => reject(new Error('이미지를 읽지 못했습니다.'))
-    reader.readAsDataURL(file)
-  })
-}
-
 // 새 흡연구역 제보 폼. 현재는 신규 장소 제보(NEW_SMOKING_AREA)만 지원합니다.
 // /api/reports, /api/reports/{id}/image 프록시(우리 도메인의 서버리스 API 라우트)를 거쳐 실제 백엔드에 등록되고,
-// 관리자 승인 전에도 바로 확인할 수 있도록 로컬에도 함께 저장합니다.
+// 관리자가 승인하기 전까지는 흡연구역 목록에 나타나지 않습니다.
 function ReportForm() {
   const { authToken } = useAppContext()
   const [place, setPlace] = useState('')
@@ -62,25 +53,11 @@ function ReportForm() {
         reporterLongitude: position.lng,
       })
 
-      const imageDataUrl = image ? await readImageAsDataUrl(image) : ''
       if (image) {
         await attachReportImage(authToken, userId, report.reportId, image)
       }
 
-      // 관리자 승인 전에도 바로 홈 목록에서 확인할 수 있도록 로컬에도 저장
-      const localReports = JSON.parse(window.localStorage.getItem('reports') || '[]')
-      localReports.unshift({
-        id: report.reportId,
-        place,
-        address,
-        latitude: position.lat,
-        longitude: position.lng,
-        image: imageDataUrl,
-        created: new Date().toISOString(),
-      })
-      window.localStorage.setItem('reports', JSON.stringify(localReports))
-
-      notify('제보가 등록되었습니다. 감사합니다!', 'success')
+      notify('제보가 등록되었습니다. 관리자 승인 후 목록에 표시됩니다.', 'success')
       setPlace('')
       setAddress('')
       setImage(null)
