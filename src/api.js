@@ -98,9 +98,10 @@ export function getUserIdFromToken(token) {
   }
 }
 
-// 내 즐겨찾기 흡연구역 ID 목록 (GET /api/bookmarks, JWT 필요)
+// 내 즐겨찾기 흡연구역 ID 목록
+// 브라우저 -> 우리 도메인의 /api/bookmarks(같은 origin, CORS 없음) -> 서버 대 서버로 실제 백엔드 호출
 export async function fetchMyBookmarkIds(token) {
-  const response = await fetch(`${BACKEND_BASE_URL}/api/bookmarks`, {
+  const response = await fetch('/api/bookmarks', {
     headers: createAuthHeaders(token),
   })
   if (!response.ok) {
@@ -118,7 +119,7 @@ export async function fetchFavoriteSmokingAreas(token) {
 }
 
 export async function addBookmark(token, smokingAreaId) {
-  const response = await fetch(`${BACKEND_BASE_URL}/api/bookmarks/${smokingAreaId}`, {
+  const response = await fetch(`/api/bookmarks/${smokingAreaId}`, {
     method: 'POST',
     headers: createAuthHeaders(token),
   })
@@ -128,7 +129,7 @@ export async function addBookmark(token, smokingAreaId) {
 }
 
 export async function removeBookmark(token, smokingAreaId) {
-  const response = await fetch(`${BACKEND_BASE_URL}/api/bookmarks/${smokingAreaId}`, {
+  const response = await fetch(`/api/bookmarks/${smokingAreaId}`, {
     method: 'DELETE',
     headers: createAuthHeaders(token),
   })
@@ -137,9 +138,9 @@ export async function removeBookmark(token, smokingAreaId) {
   }
 }
 
-// 제보 등록 (POST /api/reports, JWT + userId 쿼리파라미터 둘 다 필요)
+// 제보 등록 (JWT + userId 쿼리파라미터 둘 다 필요, 우리 도메인의 프록시 API 라우트를 거쳐 실제 백엔드로 전달됨)
 export async function submitReport(token, userId, reportRequest) {
-  const response = await fetch(`${BACKEND_BASE_URL}/api/reports?userId=${userId}`, {
+  const response = await fetch(`/api/reports?userId=${userId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -153,11 +154,11 @@ export async function submitReport(token, userId, reportRequest) {
   return response.json()
 }
 
-// 제보에 사진 첨부 (POST /api/reports/{reportId}/image, multipart/form-data)
+// 제보에 사진 첨부 (multipart/form-data, 프록시 API 라우트 경유)
 export async function attachReportImage(token, userId, reportId, imageFile) {
   const formData = new FormData()
   formData.append('image', imageFile)
-  const response = await fetch(`${BACKEND_BASE_URL}/api/reports/${reportId}/image?userId=${userId}`, {
+  const response = await fetch(`/api/reports/${reportId}/image?userId=${userId}`, {
     method: 'POST',
     headers: createAuthHeaders(token),
     body: formData,

@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { submitReport, attachReportImage, getUserIdFromToken } from '../api'
+import { useAppContext } from '../context/AppContext'
 
 function notify(message, type) {
   window.dispatchEvent(new CustomEvent('show-toast', { detail: { message, type } }))
@@ -27,25 +29,48 @@ function readImageAsDataUrl(file) {
   })
 }
 
-// 새 흡연구역 제보 폼. 백엔드 연동 없이 브라우저 localStorage에 저장합니다.
+// 새 흡연구역 제보 폼. 현재는 신규 장소 제보(NEW_SMOKING_AREA)만 지원합니다.
+// /api/reports, /api/reports/{id}/image 프록시(우리 도메인의 서버리스 API 라우트)를 거쳐 실제 백엔드에 등록되고,
+// 관리자 승인 전에도 바로 확인할 수 있도록 로컬에도 함께 저장합니다.
 function ReportForm() {
+  const { authToken } = useAppContext()
   const [place, setPlace] = useState('')
   const [address, setAddress] = useState('')
   const [image, setImage] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
   const submit = async () => {
+    if (!authToken) {
+      notify('로그인 후 이용해주세요.', 'info')
+      return
+    }
     if (!place.trim() || !address.trim()) {
       notify('장소명과 주소를 입력해 주세요.', 'error')
       return
     }
+    const userId = getUserIdFromToken(authToken)
     setSubmitting(true)
     try {
       const position = await getCurrentPosition()
+      const report = await submitReport(authToken, userId, {
+        reportType: 'NEW_SMOKING_AREA',
+        suggestedName: place,
+        address,
+        latitude: position.lat,
+        longitude: position.lng,
+        reporterLatitude: position.lat,
+        reporterLongitude: position.lng,
+      })
+
       const imageDataUrl = image ? await readImageAsDataUrl(image) : ''
-      const reports = JSON.parse(window.localStorage.getItem('reports') || '[]')
-      reports.unshift({
-        id: Date.now(),
+      if (image) {
+        await attachReportImage(authToken, userId, report.reportId, image)
+      }
+
+      // 관리자 승인 전에도 바로 홈 목록에서 확인할 수 있도록 로컬에도 저장
+      const localReports = JSON.parse(window.localStorage.getItem('reports') || '[]')
+      localReports.unshift({
+        id: report.reportId,
         place,
         address,
         latitude: position.lat,
@@ -53,7 +78,8 @@ function ReportForm() {
         image: imageDataUrl,
         created: new Date().toISOString(),
       })
-      window.localStorage.setItem('reports', JSON.stringify(reports))
+      window.localStorage.setItem('reports', JSON.stringify(localReports))
+
       notify('제보가 등록되었습니다. 감사합니다!', 'success')
       setPlace('')
       setAddress('')

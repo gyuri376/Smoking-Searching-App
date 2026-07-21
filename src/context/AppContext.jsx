@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { addBookmark, removeBookmark, fetchFavoriteSmokingAreas } from '../api'
 
 const AppContext = createContext(null)
 
@@ -18,17 +19,17 @@ export function AppProvider({ children }) {
     } catch {
       // ignore parse errors
     }
-    try {
-      setFavorites(JSON.parse(window.localStorage.getItem('favorites') || '[]'))
-    } catch {
-      setFavorites([])
-    }
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem('favorites', JSON.stringify(favorites))
-  }, [favorites])
+    if (!authToken) {
+      setFavorites([])
+      return
+    }
+    fetchFavoriteSmokingAreas(authToken)
+      .then(setFavorites)
+      .catch(() => setFavorites([]))
+  }, [authToken])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -54,17 +55,32 @@ export function AppProvider({ children }) {
     }
   }
 
-  const addFavorite = (spot) => {
+  const addFavorite = async (spot) => {
+    if (!authToken) {
+      notify('로그인 후 이용해주세요.', 'info')
+      return
+    }
     if (favorites.find((f) => f.id === spot.id)) {
       notify('이미 즐겨찾기에 추가되어 있습니다.', 'info')
       return
     }
-    setFavorites((prev) => [spot, ...prev])
-    notify('즐겨찾기에 추가되었습니다.', 'success')
+    try {
+      await addBookmark(authToken, spot.id)
+      setFavorites((prev) => [spot, ...prev])
+      notify('즐겨찾기에 추가되었습니다.', 'success')
+    } catch {
+      notify('즐겨찾기 추가에 실패했습니다.', 'error')
+    }
   }
 
-  const removeFavorite = (id) => {
-    setFavorites((prev) => prev.filter((f) => f.id !== id))
+  const removeFavorite = async (id) => {
+    if (!authToken) return
+    try {
+      await removeBookmark(authToken, id)
+      setFavorites((prev) => prev.filter((f) => f.id !== id))
+    } catch {
+      notify('즐겨찾기 삭제에 실패했습니다.', 'error')
+    }
   }
 
   const login = (token, userData) => {
